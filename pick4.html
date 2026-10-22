@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>The Golden Draw – Pick 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: centered title, left control panel + right machine stage; stacks with machine first under 900px */
+:root{
+  --bg:#060a14; --panel:#0a1022; --panel2:#0c1530; --field:#070c19; --line:#1c2641;
+  --gold:#f2c14e; --gold2:#d9a634; --gold-dim:#6f5a26; --text:#e9edf7; --muted:#8d98b5;
+  --disp:'Rajdhani','Arial Narrow',system-ui,sans-serif;
+  --body:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0; min-height:100vh; color:var(--text); font-family:var(--body); -webkit-text-size-adjust:100%;
+  background:
+    radial-gradient(900px 520px at 82% 14%,rgba(40,70,160,.28),transparent 70%),
+    radial-gradient(700px 420px at 8% 0%,rgba(30,45,95,.35),transparent 70%),
+    var(--bg);
+}
+.wrap{max-width:1240px; margin:0 auto; padding:clamp(24px,5vw,56px) max(16px,env(safe-area-inset-left,0px)) 48px max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header{text-align:center; margin-bottom:clamp(28px,5vw,56px)}
+h1{
+  margin:0; font:700 clamp(1.7rem,5.6vw,4.2rem)/1.1 var(--disp); letter-spacing:.3em; margin-right:-.3em; text-transform:uppercase;
+  color:var(--gold); background:linear-gradient(180deg,#f8dc8a,#d9a634 70%,#b98421); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+}
+.sub{margin:14px 0 0; font:500 clamp(.72rem,1.6vw,1.05rem) var(--disp); letter-spacing:.5em; margin-right:-.5em; color:#8f9bd0; text-transform:uppercase}
+.rule{width:min(170px,40vw); height:2px; margin:20px auto 0; background:linear-gradient(90deg,transparent,var(--gold2),transparent)}
+
+.grid{display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:clamp(24px,4vw,48px); align-items:start}
+
+/* control panel */
+.panel{padding:clamp(20px,3vw,32px); border:1px solid var(--line); border-radius:24px; background:linear-gradient(180deg,rgba(13,20,42,.9),rgba(9,14,30,.95)); box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.panel h2{margin:0 0 22px; display:flex; gap:10px; align-items:center; font:700 .95rem var(--disp); letter-spacing:.22em; text-transform:uppercase; color:var(--gold)}
+.panel h2 svg{width:18px; height:18px; stroke:var(--gold)}
+.snd{margin-left:auto; width:38px; height:38px; display:grid; place-items:center; padding:0; border:1px solid var(--line); border-radius:10px; background:var(--field); transition:border-color .2s}
+.snd:hover{border-color:var(--gold-dim)}
+.snd .x{display:none}
+.snd[aria-pressed="false"] .x{display:block}
+.snd[aria-pressed="false"] .wave{display:none}
+label.lbl,.lbl{display:block; margin:0 0 8px; font:500 .72rem var(--body); letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+.field{margin-bottom:20px}
+input[type=text],input[type=tel],input[type=date]{
+  width:100%; height:54px; padding:0 18px; border:1px solid var(--line); border-radius:14px; background:var(--field); color:var(--text);
+  font:400 1rem var(--body); outline:none; transition:border-color .2s, box-shadow .2s; color-scheme:dark;
+}
+input::placeholder{color:#4e5878}
+input:focus-visible{border-color:var(--gold2); box-shadow:0 0 0 3px rgba(242,193,78,.15)}
+input[type=date]{text-align:center; border-color:var(--gold-dim)}
+
+.types{display:grid; grid-template-columns:1fr 1fr; gap:12px; border:0; padding:0; margin:0 0 20px}
+.types legend{padding:0}
+.opt{position:relative; display:block}
+.opt input{position:absolute; inset:0; opacity:0; cursor:pointer; margin:0}
+.opt span{display:flex; align-items:center; justify-content:center; gap:12px; height:54px; border:1px solid var(--line); border-radius:14px; background:var(--field); color:var(--text); font:700 .95rem var(--disp); letter-spacing:.22em; transition:.2s}
+.opt span::before{content:""; width:14px; height:14px; border-radius:50%; border:2px solid currentColor}
+.opt input:checked + span{background:linear-gradient(180deg,#f7d57a,#e0ac3a); color:#1b1405; border-color:var(--gold); box-shadow:0 0 22px rgba(242,193,78,.4)}
+.opt input:checked + span::before{background:currentColor; box-shadow:inset 0 0 0 2px #f4cd68}
+.opt input:focus-visible + span{outline:2px solid #fff; outline-offset:2px}
+
+.digits{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+.digits input{
+  width:100%; min-width:0; height:clamp(72px,9vw,96px); padding:0; text-align:center; border:1px solid var(--gold-dim); border-radius:14px;
+  background:radial-gradient(circle at 50% 30%,#14193a,var(--field) 70%); color:var(--gold); font:700 2.5rem var(--disp); outline:none; caret-color:var(--gold); transition:.2s;
+}
+.digits input:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(242,193,78,.15),0 0 20px rgba(242,193,78,.25)}
+.digits.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.err{margin:10px 0 0; font-size:.85rem; color:#ff8a8a}
+.err[hidden]{display:none}
+
+.actions{display:flex; gap:12px; margin-top:22px}
+button{font-family:var(--disp); cursor:pointer}
+.play{flex:1; min-width:0; height:60px; display:flex; align-items:center; justify-content:center; gap:12px; border:0; border-radius:14px; background:linear-gradient(180deg,#f7d57a,#e0ac3a); color:#1b1405; font-weight:700; font-size:1.05rem; letter-spacing:.2em; box-shadow:0 8px 28px rgba(242,193,78,.3); transition:transform .15s, box-shadow .2s, opacity .2s}
+.play:hover:not(:disabled){box-shadow:0 8px 34px rgba(242,193,78,.5)}
+.play:active:not(:disabled){transform:translateY(1px)}
+.play:disabled{opacity:.6; cursor:progress}
+.reset{width:60px; height:60px; border:1px solid var(--line); border-radius:14px; background:var(--field); display:grid; place-items:center; transition:.2s}
+.reset:hover{border-color:var(--gold-dim)}
+.reset svg,.play svg{width:22px; height:22px; stroke:currentColor}
+.reset svg{stroke:#aab3d4}
+button:focus-visible{outline:2px solid #fff; outline-offset:3px}
+
+/* stage */
+.stage{container-type:inline-size; min-width:0}
+.title4{text-align:center; margin-bottom:26px}
+.title4 h2{margin:0; font:700 clamp(1.6rem,3.4vw,2.6rem) var(--disp); letter-spacing:.4em; margin-right:-.4em; color:var(--gold)}
+.date{margin:14px 0 0; font:500 clamp(.85rem,1.8vw,1.1rem) var(--disp); letter-spacing:.3em; color:#8f9bd0}
+.date b{color:#fff; font-weight:700; letter-spacing:.25em}
+
+.machine{
+  position:relative; padding:clamp(14px,3cqw,34px); border:2px solid transparent; border-radius:clamp(20px,4cqw,36px);
+  background:
+    linear-gradient(180deg,#0f1a3c,#0a1230 55%,#0c1634) padding-box,
+    linear-gradient(180deg,#d9a634,#2a2f4a 45%,#2a2f4a 60%,#d9a634) border-box;
+  box-shadow:0 30px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.machine::before{content:""; position:absolute; left:50%; top:-2px; width:clamp(110px,16cqw,190px); height:clamp(28px,4cqw,38px); transform:translateX(-50%); border-radius:0 0 40px 40px; background:linear-gradient(180deg,#f7d57a,#d9a634); box-shadow:0 8px 24px rgba(242,193,78,.35)}
+.machine::after{content:""; position:absolute; left:50%; top:calc(clamp(28px,4cqw,38px)/2 - 5px); width:10px; height:10px; transform:translateX(-50%); border-radius:50%; background:#ffe9a8; box-shadow:0 0 8px rgba(255,233,168,.8)}
+.screen{
+  --d:clamp(56px,16cqw,150px);
+  display:flex; justify-content:space-around; gap:8px; padding:clamp(26px,5cqw,56px) clamp(8px,2cqw,24px) clamp(20px,3.5cqw,38px);
+  margin-top:clamp(10px,2cqw,22px); border:1px solid #1d2744; border-radius:clamp(16px,3cqw,28px); background:radial-gradient(ellipse at 50% 0,#0b1330,#04070f 75%);
+  box-shadow:inset 0 0 50px rgba(0,0,0,.8);
+}
+.slot-wrap{display:flex; flex-direction:column; align-items:center; gap:clamp(12px,2.2cqw,22px)}
+.slot{
+  --h:calc(var(--d) - 6px);
+  position:relative; width:var(--d); height:var(--d); border-radius:50%; border:3px solid var(--gold-dim); overflow:hidden;
+  background:radial-gradient(circle at 50% 35%,#16214a,#060a18 75%); box-shadow:0 0 26px rgba(242,193,78,.1); transition:border-color .3s, box-shadow .3s;
+}
+.slot::after{content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,.75),transparent 32%,transparent 68%,rgba(0,0,0,.75)), radial-gradient(circle at 35% 18%,rgba(255,255,255,.12),transparent 40%)}
+.dot{position:absolute; left:50%; top:50%; width:clamp(8px,1.4cqw,12px); height:clamp(8px,1.4cqw,12px); transform:translate(-50%,-50%); background:#e8ecf7; border-radius:2px}
+.slot.on .dot{display:none}
+.reel{position:absolute; left:0; right:0; top:0; visibility:hidden; will-change:transform}
+.slot.on .reel{visibility:visible}
+.reel.blur{filter:blur(2.2px)}
+.reel b{display:grid; place-items:center; height:var(--h); font:700 calc(var(--h)*.58) var(--disp); color:#dfe6ff; font-variant-numeric:tabular-nums}
+.slot.on:not(.lit){border-color:#46619f; box-shadow:0 0 30px rgba(93,139,255,.35)}
+.slot.lit{border-color:var(--gold); box-shadow:0 0 36px rgba(242,193,78,.55), inset 0 0 20px rgba(242,193,78,.2); animation:thunk .3s ease-out}
+.slot.lit .reel b{color:#ffe08a; text-shadow:0 0 16px rgba(242,193,78,.8)}
+@keyframes thunk{0%{transform:scale(1)}40%{transform:scale(.95)}100%{transform:scale(1)}}
+.roman{font:700 clamp(1rem,2.4cqw,1.6rem) var(--disp); letter-spacing:.1em; color:var(--gold)}
+
+.cards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:22px}
+.card{padding:16px 20px; border:1px solid var(--line); border-radius:16px; background:rgba(10,16,34,.8)}
+.card .lbl{display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:.68rem}
+.card .lbl svg{width:14px; height:14px; stroke:var(--muted)}
+.card output{display:block; font:600 1.15rem var(--disp); letter-spacing:.06em; color:var(--gold); overflow-wrap:anywhere}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .stage{order:-1}
+}
+@media (max-width:640px){
+  .cards{grid-template-columns:minmax(0,1fr)}
+  .digits{gap:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  .slot.lit,.digits.shake{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="brand">The Golden Draw</h1>
+    <p class="sub">Pick 4 Number Special</p>
+    <div class="rule"></div>
+  </header>
+
+  <div class="grid">
+    <section class="panel" id="panel" aria-label="Customer information">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        Customer Information
+        <button class="snd" id="snd" type="button" aria-pressed="true" aria-label="Sound effects">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="x" d="M17 9l5 6M22 9l-5 6"/></svg>
+        </button>
+      </h2>
+
+      <div class="field">
+        <label class="lbl" for="name">Customer Name</label>
+        <input id="name" type="text" maxlength="40" placeholder="e.g. RAHUL K." autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="lbl" for="phone">WhatsApp / Phone Number</label>
+        <input id="phone" type="tel" inputmode="tel" maxlength="22" placeholder="+971 50 123 4567" autocomplete="off">
+      </div>
+
+      <fieldset class="types">
+        <legend class="lbl">Play Type</legend>
+        <label class="opt"><input type="radio" name="type" value="EXACT" checked><span>EXACT</span></label>
+        <label class="opt"><input type="radio" name="type" value="ANY"><span>ANY</span></label>
+      </fieldset>
+
+      <div class="field">
+        <label class="lbl" for="date">Draw Date</label>
+        <input id="date" type="date" value="2024-09-25">
+      </div>
+
+      <div>
+        <span class="lbl" id="digLbl">Enter 4 Digits</span>
+        <div class="digits" id="digits" role="group" aria-labelledby="digLbl"></div>
+        <p class="err" id="err" role="alert" hidden>Please enter exactly 4 digits.</p>
+      </div>
+
+      <div class="actions">
+        <button class="play" id="play" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r=".8"/><circle cx="15.5" cy="8.5" r=".8"/><circle cx="12" cy="12" r=".8"/><circle cx="8.5" cy="15.5" r=".8"/><circle cx="15.5" cy="15.5" r=".8"/></svg>
+          DRAW / PLAY
+        </button>
+        <button class="reset" id="reset" type="button" aria-label="Reset">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <section class="stage" aria-label="Lottery machine">
+      <div class="title4">
+        <h2>PICK 4</h2>
+        <p class="date">Draw Date: <b id="dd">SEP 25, 2024</b></p>
+      </div>
+      <div class="machine">
+        <div class="screen" id="slots"></div>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <span class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Customer</span>
+          <output id="cName">—</output>
+        </div>
+        <div class="card">
+          <span class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>WhatsApp / Phone</span>
+          <output id="cPhone">—</output>
+        </div>
+        <div class="card">
+          <span class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Play Type</span>
+          <output id="cType">EXACT</output>
+        </div>
+      </div>
+      <p class="sr" id="live" aria-live="polite"></p>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const ROMAN = ['I','II','III','IV'];
+  const REPEATS = 6, LAND = (REPEATS - 1) * 10;     // reel is 0-9 repeated; spin ends in the last repeat
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.4 : 1;
+  const EASE = 'cubic-bezier(.16,.8,.2,1)';
+
+  // ---- machine slots
+  const cells = Array.from({ length: REPEATS * 10 }, (_, n) => `<b>${n % 10}</b>`).join('');
+  const slots = ROMAN.map((r, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'slot-wrap';
+    wrap.innerHTML = `<div class="slot"><div class="reel" aria-hidden="true">${cells}</div><i class="dot"></i></div><span class="roman">${r}</span>`;
+    $('slots').appendChild(wrap);
+    return { el: wrap.querySelector('.slot'), reel: wrap.querySelector('.reel'), digit: 0 };
+  });
+  const setPos = (reel, n, ms) => {
+    reel.style.transition = ms ? `transform ${ms}ms ${EASE}` : 'none';
+    reel.style.transform = `translateY(calc(var(--h) * -${n}))`;
+  };
+
+  // ---- four digit boxes
+  const digitsEl = $('digits');
+  const boxes = [0, 1, 2, 3].map(i => {
+    const b = document.createElement('input');
+    Object.assign(b, { type: 'text', maxLength: 1, autocomplete: 'off' });
+    b.inputMode = 'numeric';
+    b.pattern = '[0-9]*';
+    b.setAttribute('aria-label', `Digit ${i + 1}`);
+    digitsEl.appendChild(b);
+    return b;
+  });
+  boxes.forEach((b, i) => {
+    b.addEventListener('focus', () => b.select());
+    b.addEventListener('input', () => {
+      b.value = b.value.replace(/\D/g, '').slice(-1);
+      if (b.value) { hideErr(); if (i < 3) boxes[i + 1].focus(); }
+    });
+    b.addEventListener('keydown', e => {
+      if (e.key === 'Enter') draw();
+      else if (e.key === 'Backspace' && !b.value && i > 0) { boxes[i - 1].value = ''; boxes[i - 1].focus(); }
+      else if (e.key === 'ArrowLeft' && i > 0) boxes[i - 1].focus();
+      else if (e.key === 'ArrowRight' && i < 3) boxes[i + 1].focus();
+    });
+    b.addEventListener('paste', e => {
+      e.preventDefault();
+      const d = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4 - i);
+      [...d].forEach((c, k) => { boxes[i + k].value = c; });
+      if (d) { hideErr(); boxes[Math.min(i + d.length, 3)].focus(); }
+    });
+  });
+
+  const hideErr = () => { $('err').hidden = true; };
+  const showErr = () => {
+    $('err').hidden = false;
+    digitsEl.classList.remove('shake'); void digitsEl.offsetWidth; digitsEl.classList.add('shake');
+    (boxes.find(b => !b.value) || boxes[0]).focus();
+  };
+
+  // ---- sound (Web Audio, no files): reel ticks that slow down, a thud per stop, a chime at the end
+  let ctx, master, clickBuf, bus, t0, soundOn = true;
+  function startSound(totalMs) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!ctx) {
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = soundOn ? 1 : 0; master.connect(ctx.destination);
+      const n = Math.floor(ctx.sampleRate * 0.02);
+      clickBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const ch = clickBuf.getChannelData(0);
+      for (let k = 0; k < n; k++) ch[k] = (Math.random() * 2 - 1) * Math.pow(1 - k / n, 3);
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    bus = ctx.createGain(); bus.connect(master);       // one bus per draw so RESET can cut it off
+    t0 = ctx.currentTime + 0.03;
+    tone(784, t0 + totalMs / 1000 + 0.05, 0.9, 0.12);
+    tone(1175, t0 + totalMs / 1000 + 0.12, 0.9, 0.09);
+  }
+  function tone(freq, at, len, vol, endFreq) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(freq, at);
+    if (endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, at + len);
+    g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.001, at + len);
+    o.connect(g).connect(bus); o.start(at); o.stop(at + len);
+  }
+  function reelSound(i, from, to, durMs) {
+    if (!ctx || !bus) return;
+    const n = to - from, dur = durMs / 1000;
+    for (let k = 1; k <= n; k++) {                      // one tick per digit passing the window, spaced like the ease-out
+      const src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = clickBuf; src.playbackRate.value = 0.9 + i * 0.12; g.gain.value = 0.35;
+      src.connect(g).connect(bus); src.start(t0 + dur * (1 - Math.pow(1 - k / n, 1 / 3)));
+    }
+    tone(170, t0 + dur, 0.14, 0.5, 50);                 // stop thud
+  }
+  $('snd').addEventListener('click', e => {
+    soundOn = !soundOn;
+    e.currentTarget.setAttribute('aria-pressed', soundOn);
+    if (master) master.gain.value = soundOn ? 1 : 0;
+  });
+
+  // ---- draw / reset
+  let timers = [], running = false;
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+
+  function draw() {
+    if (running) return;
+    const v = boxes.map(b => b.value).join('');
+    if (!/^\d{4}$/.test(v)) { showErr(); return; }
+    hideErr();
+    running = true; $('play').disabled = true;
+    startSound((2000 + 3 * 500) * calm);
+    slots.forEach((s, i) => {
+      const d = +v[i], dur = (2000 + i * 500) * calm;
+      reelSound(i, s.digit, LAND + d, dur);
+      s.el.classList.remove('lit'); s.el.classList.add('on');
+      setPos(s.reel, s.digit, 0); void s.reel.offsetHeight;   // restart from the digit currently shown
+      s.reel.classList.add('blur');
+      setPos(s.reel, LAND + d, dur);
+      timers.push(setTimeout(() => s.reel.classList.remove('blur'), dur - 700 * calm));
+      timers.push(setTimeout(() => { s.digit = d; s.el.classList.add('lit'); }, dur));
+    });
+    timers.push(setTimeout(() => {
+      running = false; $('play').disabled = false;
+      $('live').textContent = `Result ${v.split('').join(' ')}`;
+    }, (2000 + 3 * 500) * calm + 50));
+  }
+
+  function reset() {
+    clearTimers(); running = false; $('play').disabled = false;
+    if (bus) { bus.disconnect(); bus = null; }
+    boxes.forEach(b => { b.value = ''; });
+    slots.forEach(s => {
+      s.el.classList.remove('on', 'lit'); s.reel.classList.remove('blur');
+      s.digit = 0; setPos(s.reel, 0, 0);
+    });
+    hideErr(); $('live').textContent = ''; boxes[0].focus();
+  }
+
+  $('play').addEventListener('click', draw);
+  $('reset').addEventListener('click', reset);
+
+  // ---- customer info -> display
+  const fmtDate = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); return m ? `${MONTHS[+m[2] - 1]} ${+m[3]}, ${m[1]}` : '—'; };
+  const sync = () => {
+    $('phone').value = $('phone').value.replace(/[^\d+\s()-]/g, '');
+    $('dd').textContent = fmtDate($('date').value);
+    $('cName').textContent = $('name').value.trim() || '—';
+    $('cPhone').textContent = $('phone').value.trim() || '—';
+    $('cType').textContent = document.querySelector('input[name=type]:checked').value;
+  };
+  $('panel').addEventListener('input', sync);
+  $('panel').addEventListener('change', sync);
+  sync();
+})();
+</script>
+</body>
+</html>
